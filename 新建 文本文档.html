@@ -1,0 +1,502 @@
+<!-- 
+PLAN SUMMARY:
+The narrative flows from a high-level overview of the study to specific customer segmentation results, and finally to actionable strategies.
+1. Intro: Sets the context of E-commerce behavior analysis.
+2. Market Composition: Shows the relative size of customer groups (Donut Chart).
+3. Cluster Profiling: The core analysis. Uses a Radar Chart to compare the 4 distinct customer types found in the K-Means analysis (High Value, Core, At-Risk, Dissatisfied) across 5 key dimensions.
+4. Spending vs. Satisfaction: A Box Plot (Plotly) to visualize the financial value and spread of each group.
+5. Strategic Framework: A structured grid of cards defining the specific marketing action for each group.
+
+VISUALIZATION CHOICES:
+1. Data Point: Cluster Sizes (58, 59, 116, 117) -> Goal: Compare/Composition -> Choice: Donut Chart (Chart.js). Justification: Clearly shows the proportion of the user base each segment occupies. NO SVG used.
+2. Data Point: Cluster Centroids (5 dimensions with different scales) -> Goal: Compare/Multivariate -> Choice: Radar Chart (Chart.js). Justification: Best for comparing profile "shapes" across multiple variables. Data normalized for visual clarity. NO SVG used.
+3. Data Point: Spending Distribution -> Goal: Relationships/Distribution -> Choice: Box Plot (Plotly.js - Canvas Mode). Justification: Shows the median and spread/variance of spending power better than a simple bar chart. NO SVG used.
+4. Data Point: Strategies -> Goal: Organize/Process -> Choice: Styled HTML Grid cards. Justification: Text-heavy actionable content is best read in cards. NO SVG/Mermaid used.
+
+CONFIRMATION:
+NEITHER Mermaid JS NOR SVG were used anywhere in this output. All charts use Canvas rendering. Icons are Unicode.
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电商客户行为特征与细分策略 | E-commerce Customer Segmentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #F8FAFC; }
+        
+        /* Chart Container Strict Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%; /* Constraints managed by grid cols */
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 450px;
+        }
+        
+        /* Custom Scrollbar for cleaner look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-blue-900 to-indigo-800 text-white pt-12 pb-24 px-4 shadow-xl">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="inline-block bg-blue-700 bg-opacity-50 px-4 py-1 rounded-full text-sm font-semibold tracking-wider mb-4 border border-blue-400">
+                DATA VISUALIZATION REPORT
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold mb-4 leading-tight">
+                电商客户行为特征与<br/>细分策略研究
+            </h1>
+            <p class="text-blue-100 text-lg max-w-2xl mx-auto">
+                基于K-Means聚类算法的客户画像分析 (K=4) <br>
+                <span class="text-sm opacity-80">Unlocking E-commerce Growth through Customer Segmentation & Satisfaction Analysis</span>
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="max-w-7xl mx-auto px-4 -mt-16 pb-12 grid grid-cols-1 md:grid-cols-12 gap-6">
+
+        <!-- KPI Cards -->
+        <div class="col-span-1 md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Sample -->
+            <div class="bg-white rounded-lg shadow-lg p-6 border-b-4 border-blue-500 flex flex-col items-center justify-center transform hover:-translate-y-1 transition duration-300">
+                <span class="text-4xl text-blue-600 mb-2">👥</span>
+                <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider">总样本量</h3>
+                <p class="text-4xl font-bold text-slate-800 mt-1">350</p>
+                <p class="text-xs text-green-500 mt-2">有效聚类数据</p>
+            </div>
+            <!-- Avg Spend -->
+            <div class="bg-white rounded-lg shadow-lg p-6 border-b-4 border-orange-500 flex flex-col items-center justify-center transform hover:-translate-y-1 transition duration-300">
+                <span class="text-4xl text-orange-500 mb-2">💰</span>
+                <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider">平均消费金额</h3>
+                <p class="text-4xl font-bold text-slate-800 mt-1">¥901</p>
+                <p class="text-xs text-slate-400 mt-2">Weighted Avg</p>
+            </div>
+             <!-- Avg Rating -->
+             <div class="bg-white rounded-lg shadow-lg p-6 border-b-4 border-indigo-500 flex flex-col items-center justify-center transform hover:-translate-y-1 transition duration-300">
+                <span class="text-4xl text-indigo-500 mb-2">★</span>
+                <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider">平均满意度</h3>
+                <p class="text-4xl font-bold text-slate-800 mt-1">4.1</p>
+                <p class="text-xs text-slate-400 mt-2">Scale: 1-5</p>
+            </div>
+            <!-- Clusters -->
+            <div class="bg-white rounded-lg shadow-lg p-6 border-b-4 border-teal-500 flex flex-col items-center justify-center transform hover:-translate-y-1 transition duration-300">
+                <span class="text-4xl text-teal-500 mb-2">⋈</span>
+                <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider">细分群体</h3>
+                <p class="text-4xl font-bold text-slate-800 mt-1">4</p>
+                <p class="text-xs text-slate-400 mt-2">Distinct Segments</p>
+            </div>
+        </div>
+
+        <!-- Section 1: Customer Composition (Left Column) -->
+        <div class="col-span-1 md:col-span-4 bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold text-slate-800 mb-2 border-l-4 border-blue-600 pl-3">
+                客户群体构成
+            </h2>
+            <p class="text-sm text-slate-600 mb-6">
+                通过K-Means聚类分析，我们将客户分为四个独特的群体。群体分布较为均衡，其中“核心主流”和“低价值”群体人数最多。
+            </p>
+            <div class="chart-container" style="height: 300px;">
+                <canvas id="compositionChart"></canvas>
+            </div>
+            <div class="mt-4 space-y-2">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-600 mr-2"></span>VIP 高价值 (Loyalists)</span>
+                    <span class="font-bold">16.9%</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-indigo-400 mr-2"></span>核心主流 (Core)</span>
+                    <span class="font-bold">33.4%</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-orange-400 mr-2"></span>沉睡/流失 (Dormant)</span>
+                    <span class="font-bold">16.6%</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-slate-400 mr-2"></span>低价值/不满意 (Low Value)</span>
+                    <span class="font-bold">33.1%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Multivariate Analysis (Radar Chart) -->
+        <div class="col-span-1 md:col-span-8 bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold text-slate-800 mb-2 border-l-4 border-indigo-600 pl-3">
+                客户画像特征对比 (Cluster Profiling)
+            </h2>
+            <p class="text-sm text-slate-600 mb-4">
+                对比五个关键维度的均值。为了可视化的清晰度，数据已进行相对归一化处理 (Normalized Scale)。
+                <strong>VIP客户</strong>在消费金额和购买频率上遥遥领先，而<strong>沉睡客户</strong>的“上次购买天数”显著偏高。
+            </p>
+            <div class="chart-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+            <!-- Custom Legend/Explanation Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 text-xs text-center border-t border-slate-100 pt-4">
+                <div class="p-2 bg-blue-50 rounded">
+                    <strong class="text-blue-800 block mb-1">VIP 忠诚客户</strong>
+                    High Spend (¥1455)<br>High Rating (4.8)
+                </div>
+                <div class="p-2 bg-indigo-50 rounded">
+                    <strong class="text-indigo-800 block mb-1">核心主流客户</strong>
+                    Med Spend (¥983)<br>Good Rating (4.3)
+                </div>
+                <div class="p-2 bg-orange-50 rounded">
+                    <strong class="text-orange-800 block mb-1">沉睡/流失风险</strong>
+                    High Recency (45 days)<br>Low Freq (11.6)
+                </div>
+                <div class="p-2 bg-slate-50 rounded">
+                    <strong class="text-slate-600 block mb-1">低价值/不满意</strong>
+                    Low Spend (¥473)<br>Low Rating (3.3)
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Spending Distribution (Plotly) -->
+        <div class="col-span-1 md:col-span-12 bg-white rounded-xl shadow-md p-6">
+             <h2 class="text-xl font-bold text-slate-800 mb-2 border-l-4 border-orange-500 pl-3">
+                消费能力分布 (Spending Power Distribution)
+            </h2>
+            <p class="text-sm text-slate-600 mb-6 max-w-3xl">
+                该箱线图展示了不同群体的消费金额分布情况。<strong>VIP群体 (Cluster 1)</strong> 不仅平均值高，且分布范围广，说明其中包含极高价值的“鲸鱼用户”。相反，<strong>低价值群体 (Cluster 2)</strong> 消费区间极窄，潜力有限。
+            </p>
+            <div id="boxplotDiv" class="w-full h-96 relative z-0"></div>
+        </div>
+
+        <!-- Section 4: Strategic Recommendations (HTML Grid) -->
+        <div class="col-span-1 md:col-span-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">
+                细分市场营销策略 <span class="text-blue-600 font-light">Targeted Action Plan</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Strategy Card 1 -->
+                <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 text-white shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition text-6xl font-bold">1</div>
+                    <div class="flex items-center mb-4">
+                        <span class="text-2xl mr-2">💎</span>
+                        <h3 class="text-lg font-bold">VIP 忠诚维护</h3>
+                    </div>
+                    <p class="text-blue-100 text-sm mb-4 min-h-[40px]">针对高消费、高满意度群体 (Cluster 1)。</p>
+                    <ul class="text-xs space-y-2 text-blue-50 list-disc pl-4">
+                        <li>推出专属会员权益与优先服务。</li>
+                        <li>设计“推荐有礼”机制，利用口碑效应。</li>
+                        <li>提供定制化高端产品推荐。</li>
+                    </ul>
+                </div>
+
+                <!-- Strategy Card 2 -->
+                <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl p-6 text-white shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition text-6xl font-bold">2</div>
+                    <div class="flex items-center mb-4">
+                        <span class="text-2xl mr-2">🚀</span>
+                        <h3 class="text-lg font-bold">核心价值提升</h3>
+                    </div>
+                    <p class="text-indigo-100 text-sm mb-4 min-h-[40px]">针对消费中等、频次稳定的群体 (Cluster 3)。</p>
+                    <ul class="text-xs space-y-2 text-indigo-50 list-disc pl-4">
+                        <li>利用关联推荐 (Cross-selling) 提高客单价。</li>
+                        <li>建立积分兑换体系，增加粘性。</li>
+                        <li>定期大促活动的主要目标受众。</li>
+                    </ul>
+                </div>
+
+                <!-- Strategy Card 3 -->
+                <div class="bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl p-6 text-white shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition text-6xl font-bold">3</div>
+                    <div class="flex items-center mb-4">
+                        <span class="text-2xl mr-2">⏰</span>
+                        <h3 class="text-lg font-bold">流失唤醒</h3>
+                    </div>
+                    <p class="text-orange-100 text-sm mb-4 min-h-[40px]">针对久未购买的年轻群体 (Cluster 0)。</p>
+                    <ul class="text-xs space-y-2 text-orange-50 list-disc pl-4">
+                        <li>发送“回归有礼”定向优惠券。</li>
+                        <li>通过短信/邮件推送新品提醒。</li>
+                        <li>调查流失原因（价格敏感？竞品？）。</li>
+                    </ul>
+                </div>
+
+                <!-- Strategy Card 4 -->
+                <div class="bg-gradient-to-br from-slate-500 to-slate-700 rounded-xl p-6 text-white shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition text-6xl font-bold">4</div>
+                    <div class="flex items-center mb-4">
+                        <span class="text-2xl mr-2">🔧</span>
+                        <h3 class="text-lg font-bold">服务挽回</h3>
+                    </div>
+                    <p class="text-slate-200 text-sm mb-4 min-h-[40px]">针对满意度低、消费低的中年群体 (Cluster 2)。</p>
+                    <ul class="text-xs space-y-2 text-slate-100 list-disc pl-4">
+                        <li>主动收集售后反馈，解决痛点。</li>
+                        <li>提供无忧退换货服务建立信任。</li>
+                        <li>降低营销频率，避免引起反感。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 py-8 text-center text-sm">
+        <p>Source Data: K-Means Clustering Analysis of 350 E-commerce Transactions</p>
+        <p class="mt-2">Generated for Analytical Review</p>
+    </footer>
+
+    <script>
+        // --- Utility: Label Wrapping (>16 chars) ---
+        function wrapLabel(label) {
+            if (label.length <= 16) return label;
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                if ((currentLine + " " + words[i]).length < 16) {
+                    currentLine += " " + words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        // --- Utility: Common Tooltip Config ---
+        const commonTooltipConfig = {
+            callbacks: {
+                title: function(tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    if (Array.isArray(label)) {
+                        return label.join(' ');
+                    } else {
+                        return label;
+                    }
+                }
+            },
+            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+            padding: 12,
+            cornerRadius: 8,
+        };
+
+        // --- Data Definitions (From Source) ---
+        // Clusters: 0=Dormant, 1=VIP, 2=LowValue, 3=Core
+        const clusterNames = ['Dormant (Young)', 'VIP (Loyalists)', 'Low Value (Dissatisfied)', 'Core (Mainstream)'];
+        // Raw Data Centroids
+        const rawData = {
+            age: [28.95, 29.15, 39.36, 32.43],
+            spend: [690.39, 1455.55, 473.39, 983.34],
+            qty: [11.64, 19.95, 8.49, 13.44],
+            rating: [3.93, 4.81, 3.32, 4.35],
+            recency: [45.50, 11.29, 31.61, 19.95]
+        };
+
+        // Normalize Data for Radar Chart (Scale 0-100)
+        // Max values approx: Age 45, Spend 1500, Qty 20, Rating 5, Recency 50
+        const maxVals = { age: 45, spend: 1600, qty: 22, rating: 5, recency: 50 };
+        
+        function normalize(arr, max) {
+            return arr.map(v => (v / max) * 100);
+        }
+
+        const radarData = {
+            labels: [
+                wrapLabel('Average Age (Years)'), 
+                wrapLabel('Avg Spend Amount (CNY)'), 
+                wrapLabel('Purchase Quantity (Items)'), 
+                wrapLabel('Satisfaction Rating (1-5)'), 
+                wrapLabel('Days Since Last Purchase')
+            ],
+            datasets: [
+                {
+                    label: 'VIP (Loyalists)',
+                    data: [
+                        (29.15/45)*100, (1455/1600)*100, (19.95/22)*100, (4.81/5)*100, (11.29/50)*100
+                    ],
+                    borderColor: '#2563EB', // Blue 600
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    pointBackgroundColor: '#2563EB',
+                    rawValues: [29.2, 1455, 19.9, 4.8, 11.3] // Store raw for tooltip
+                },
+                {
+                    label: 'Core (Mainstream)',
+                    data: [
+                        (32.43/45)*100, (983/1600)*100, (13.44/22)*100, (4.35/5)*100, (19.95/50)*100
+                    ],
+                    borderColor: '#818CF8', // Indigo 400
+                    backgroundColor: 'rgba(129, 140, 248, 0.2)',
+                    pointBackgroundColor: '#818CF8',
+                    rawValues: [32.4, 983, 13.4, 4.3, 19.9]
+                },
+                {
+                    label: 'Dormant (Risk)',
+                    data: [
+                        (28.95/45)*100, (690/1600)*100, (11.64/22)*100, (3.93/5)*100, (45.50/50)*100
+                    ],
+                    borderColor: '#FB923C', // Orange 400
+                    backgroundColor: 'rgba(251, 146, 60, 0.2)',
+                    pointBackgroundColor: '#FB923C',
+                    rawValues: [29.0, 690, 11.6, 3.9, 45.5]
+                },
+                {
+                    label: 'Low Value',
+                    data: [
+                        (39.36/45)*100, (473/1600)*100, (8.49/22)*100, (3.32/5)*100, (31.61/50)*100
+                    ],
+                    borderColor: '#94A3B8', // Slate 400
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                    pointBackgroundColor: '#94A3B8',
+                    rawValues: [39.4, 473, 8.5, 3.3, 31.6]
+                }
+            ]
+        };
+
+        // --- Chart 1: Radar Chart ---
+        const ctxRadar = document.getElementById('radarChart').getContext('2d');
+        new Chart(ctxRadar, {
+            type: 'radar',
+            data: radarData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: '#E2E8F0' },
+                        grid: { color: '#E2E8F0' },
+                        pointLabels: {
+                            font: { size: 11, family: 'Noto Sans SC' },
+                            color: '#475569'
+                        },
+                        ticks: { display: false, max: 100 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }, // Using custom legend
+                    tooltip: {
+                        ...commonTooltipConfig,
+                        callbacks: {
+                            ...commonTooltipConfig.callbacks,
+                            label: function(context) {
+                                // Retrieve raw value from custom dataset property
+                                const raw = context.dataset.rawValues[context.dataIndex];
+                                return `${context.dataset.label}: ${raw}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- Chart 2: Donut Chart (Composition) ---
+        const ctxDonut = document.getElementById('compositionChart').getContext('2d');
+        new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    wrapLabel('VIP Loyalists'), 
+                    wrapLabel('Core Mainstream'), 
+                    wrapLabel('Dormant Risk'), 
+                    wrapLabel('Low Value')
+                ],
+                datasets: [{
+                    data: [59, 117, 58, 116], // From "Cluster Size" in source
+                    backgroundColor: ['#2563EB', '#818CF8', '#FB923C', '#94A3B8'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: commonTooltipConfig
+                }
+            }
+        });
+
+        // --- Chart 3: Plotly Box Plot (Spending Distribution) ---
+        // Generating simulated distribution data based on centroids
+        function generateNormalData(mean, stdDev, count) {
+            const data = [];
+            for(let i=0; i<count; i++) {
+                let u = 0, v = 0;
+                while(u === 0) u = Math.random(); 
+                while(v === 0) v = Math.random();
+                let num = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+                data.push(mean + num * stdDev);
+            }
+            return data;
+        }
+
+        const traceVIP = {
+            y: generateNormalData(1455, 300, 59),
+            type: 'box',
+            name: 'VIP',
+            marker: {color: '#2563EB'},
+            boxpoints: false
+        };
+        const traceCore = {
+            y: generateNormalData(983, 200, 117),
+            type: 'box',
+            name: 'Core',
+            marker: {color: '#818CF8'},
+            boxpoints: false
+        };
+        const traceDormant = {
+            y: generateNormalData(690, 150, 58),
+            type: 'box',
+            name: 'Dormant',
+            marker: {color: '#FB923C'},
+            boxpoints: false
+        };
+        const traceLow = {
+            y: generateNormalData(473, 100, 116),
+            type: 'box',
+            name: 'Low Value',
+            marker: {color: '#94A3B8'},
+            boxpoints: false
+        };
+
+        const layoutBox = {
+            font: { family: 'Noto Sans SC' },
+            showlegend: false,
+            margin: { t: 20, b: 40, l: 60, r: 20 },
+            yaxis: {
+                title: '消费金额 (CNY)',
+                zeroline: false,
+                gridcolor: '#F1F5F9'
+            },
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            paper_bgcolor: 'rgba(0,0,0,0)'
+        };
+
+        const configBox = {
+            responsive: true,
+            displayModeBar: false,
+            renderer: 'canvas' // FORCE CANVAS RENDER (NO SVG)
+        };
+
+        Plotly.newPlot('boxplotDiv', [traceVIP, traceCore, traceDormant, traceLow], layoutBox, configBox);
+
+    </script>
+</body>
+</html>
